@@ -9,6 +9,7 @@ module UserSolve (userSolve, printP, help) where
 
 import Data.List (transpose)
 import AlgoSolve
+import NumAbbreviation
 
 -- * User input functions
 -- | recursive function for user solving the nonogram until it is correct
@@ -113,7 +114,7 @@ printP [] rhs chs =
          _  -> error "printP: row hint not empty after complete traversal"
 printP (r:rs) (rh:rhs) chs = do
     let rowP = concatMap (('|' :) . tail . init . show) r
-    putStr $ rowP ++ "|\t"
+    putStr $ rowP ++ "| "
     printRowHint rh
     printP rs rhs chs
 printP _ _ _ = error "printP: Hints may have been empty"
@@ -121,28 +122,31 @@ printP _ _ _ = error "printP: Hints may have been empty"
 -- | helper function printing the row hints
 printRowHint :: Hint -> IO ()
 printRowHint rhs = do
-    let line = concatMap (flip (++) "," . show) rhs
+    let line = concatMap (flip (++) " " . showNum) rhs
     putStrLn $ init line
 
 -- | helper function printing the column hints
 printColHint :: Hints -> IO ()
 printColHint [] = return ()
 printColHint chs = do
-    let line = concatMap ((flip (++) "," . show) . head) chs
+    let line = concatMap ((flip (++) " " . showNum) . head) chs
     putStrLn $ init (' ' : line)
     printColHint (filter (/= []) . map tail $ chs)
 
 -- | function initiated when user inputs the 'help' command in-game
 help :: IO ()
-help = putStr $ unlines [
-       "In-game help:",
+help = putStrLn $ unlines [
+       "In-game commands:",
        "    print           prints the board",
        "    add row col     adds X to position (row, col)",
        "    del row col     delete X at (row, col)",
        "    reveal          reveal the solution",
        "    home            go to home screen",
        "    quit            quit game",
-       "    help            display this help message"]
+       "    help            display this help message",
+       "",
+       "Do note that hint numbers greater than 10 and less than 36 are" ++
+       " abbreviated to alphabetical characters."]
 
 -- * check solution functions
 -- | checking whether the nonogram has been solved or not

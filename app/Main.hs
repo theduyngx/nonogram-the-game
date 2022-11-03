@@ -50,7 +50,7 @@ startGame = do
     let colHint = read colStr :: Hints
     let solution = nonogram rowHint colHint
     case solution of
-         [] ->
+         "nil" ->
             do
               putStrLn "\nThe hints can't produce a solution, please try another one."
               startGame
@@ -59,13 +59,14 @@ startGame = do
               let r = length colHint
               let c = length rowHint
               let puzzle = replicate c (replicate r '_')
+              putStrLn ""
               printP puzzle rowHint colHint
               putStrLn "Enter your commands below:"
               state <- userSolve puzzle rowHint colHint
               case state of
                    "m"   -> main
                    "cmd" -> mainCmd
-                   "sol" -> do printSolution solution
+                   "sol" -> do putStrLn solution
                                putStrLn "Here's the solution, start again?"
                                mainCmd
                    _     -> return ()
@@ -97,7 +98,3 @@ helpHome = do
        "    quit            quit game",
        "    help            display this help message"]
     help
-
--- | function executed when user asks to print out the solution
-printSolution :: Puzzle -> IO ()
-printSolution = mapM_ putStr
