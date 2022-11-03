@@ -31,25 +31,25 @@ userSolve puzzle rowHint colHint =
                           >> userSolve puzzle rowHint colHint
               "reveal" -> return "sol"
               str      ->
-                  case length $ words str of
-                       3 -> let command
-                                 | h == 'a' = do
-                                       puzzle' <- addX r c puzzle
-                                       userSolve puzzle' rowHint colHint
-                                 | h == 'd' = do
-                                       puzzle' <- delX r c puzzle
-                                       userSolve puzzle' rowHint colHint
-                                 | otherwise = elseCase
-                                 where [h:hs,rs,cs] = words str
-                                       r = read rs :: Int
-                                       c = read cs :: Int
+                  case words str of
+                       [h:_,rs,cs] ->
+                            let command
+                                  | h == 'a' = do
+                                        puzzle' <- addX r c puzzle
+                                        userSolve puzzle' rowHint colHint
+                                  | h == 'd' = do
+                                        puzzle' <- delX r c puzzle
+                                        userSolve puzzle' rowHint colHint
+                                  | otherwise = elseCase
+                                  where r = read rs :: Int
+                                        c = read cs :: Int
                             in command
                        _ -> elseCase
 
 -- * mark or unmarked functions
 -- | function marking (or adding) X to position
 addX :: Int -> Int -> Puzzle -> IO Puzzle
-addX  r c pz@(x:xs)
+addX  r c pz@(x:_)
     | r < 1 || c < 1 || r > length pz || c > length x = do
           putStrLn "\t** Position not within range of the board!"
           return pz
@@ -60,6 +60,7 @@ addX  r c pz@(x:xs)
                   else do
                        putStrLn $ "Marked (" ++ show r ++ ", " ++ show c ++ ")." 
                        return $ findCol r c pz 1 addRow
+addX _ _ _ = error "addX: Puzzle is empty"
 
 -- | function to mark X to a specific row
 --   called as an argument of findCol for the function addX
@@ -68,11 +69,11 @@ addRow _ [] _ = []
 addRow c (row:rows) ci
     | c == ci   = 'X' : rows
     | c >  ci   = row : addRow c rows (ci+1)
-    | otherwise = error "row index somehow exceeded number of rows"
+    | otherwise = error "addRow: row index somehow exceeded number of rows"
 
 -- | function to delete a marked X on the board
 delX :: Int -> Int -> Puzzle -> IO Puzzle
-delX  r c pz@(x:xs)
+delX  r c pz@(x:_)
     | r < 1 || c < 1 || r > length pz || c > length x = do
           putStrLn "\t** Position not within range of the board!"
           return pz
@@ -83,6 +84,7 @@ delX  r c pz@(x:xs)
                   else do
                        putStrLn $ "Unmarked (" ++ show r ++ ", " ++ show c ++ ")." 
                        return $ findCol r c pz 1 delRow
+delX _ _ _ = error "delX: Puzzle is empty"
 
 -- | function to unmark X in a specific row;
 --   similar function to addRow
@@ -91,15 +93,16 @@ delRow _ [] _ = []
 delRow c (row:rows) ci
     | c == ci   = '_' : rows
     | c >  ci   = row : delRow c rows (ci+1)
-    | otherwise = error "row index somehow exceeded number of rows"
+    | otherwise = error "delRow: row index exceeded number of rows"
 
 -- | function to find the column that needs modification;
 --   used in both addX and delX functions
 findCol :: Int -> Int -> Puzzle -> Int -> (Int -> Row -> Int -> Row) -> Puzzle
+findCol _ _ [] _ _ = error "findCol: traversed through entire puzzle incorrectly"
 findCol r c (x:xs) ri f
     | r == ri   = f c x 1 : xs
     | r >  ri   = x : findCol r c xs (ri+1) f
-    | otherwise = error "column index somehow exceeded number of columns"
+    | otherwise = error "findCol: column index exceeded number of columns"
 
 -- * printing functions
 -- | printing the entire board (with row and column hints)
@@ -107,12 +110,13 @@ printP :: Puzzle -> Hints -> Hints -> IO ()
 printP [] rhs chs =
     case rhs of
          [] -> printColHint chs
-         _  -> error "row hint not empty after complete traversal in printP"
+         _  -> error "printP: row hint not empty after complete traversal"
 printP (r:rs) (rh:rhs) chs = do
     let rowP = concatMap (('|' :) . tail . init . show) r
     putStr $ rowP ++ "|\t"
     printRowHint rh
     printP rs rhs chs
+printP _ _ _ = error "printP: Hints may have been empty"
 
 -- | helper function printing the row hints
 printRowHint :: Hint -> IO ()
@@ -150,6 +154,7 @@ rowSolved [] _ = True
 rowSolved (r:rs) (h:hs) =
     length (filter (== 'X') r) == sum h && (validRow r' h && rowSolved rs hs)
     where r' = reverse . dropWhile (== '_') . reverse . dropWhile (== '_') $ r
+          validRow _ []     = True
           validRow x (y:ys) =
             let (fr, en) = splitAt y x in
             case fr of
@@ -159,3 +164,4 @@ rowSolved (r:rs) (h:hs) =
                 case en of
                   [] -> allX
                   _  -> allX && head en == '_' && validRow (dropWhile (== '_') en) ys
+rowSolved _ _ = error "rowSolved: row or column has empty hint"

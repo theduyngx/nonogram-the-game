@@ -73,6 +73,7 @@ startGame = do
 -- | welcome title screen of the game
 printWelcome :: IO ()
 printWelcome = putStr $ unlines [
+    "",
     " _|      _|",
     " _|_|    _|    _|_|    _|_|_|      _|_|      _|_|_|  _|  _|_|    _|_|_|  _|_|_|  _|_|",
     " _|  _|  _|  _|    _|  _|    _|  _|    _|  _|    _|  _|_|      _|    _|  _|    _|    _|",
