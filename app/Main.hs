@@ -93,8 +93,7 @@ helpHome :: IO ()
 helpHome = do
     putStrLn $ unlines [
        "Help:",
-       "    start           starting the game",
+       "    start           start the game",
        "    home            go to home screen",
-       "    quit            quit game",
-       "    help            display this help message"]
+       "    quit            quit game"]
     help

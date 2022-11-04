@@ -26,11 +26,14 @@ userSolve puzzle rowHint colHint =
                         >> userSolve puzzle rowHint colHint
          case input of
               "quit"   -> putStrLn "quitting game..." >> return ""
-              "help"   -> help >> userSolve puzzle rowHint colHint
               "home"   -> return "m"
+              "reveal" -> return "sol"
+              "help"   -> help
+                          >> userSolve puzzle rowHint colHint
               "print"  -> printP puzzle rowHint colHint
                           >> userSolve puzzle rowHint colHint
-              "reveal" -> return "sol"
+              "dict"   -> printDict
+                          >> userSolve puzzle rowHint colHint
               str      ->
                   case words str of
                        [h:_,rs,cs] ->
@@ -135,18 +138,20 @@ printColHint chs = do
 
 -- | function initiated when user inputs the 'help' command in-game
 help :: IO ()
-help = putStrLn $ unlines [
+help = putStr $ unlines [
        "In-game commands:",
-       "    print           prints the board",
-       "    add row col     adds X to position (row, col)",
+       "    print           print the board",
+       "    add row col     add X to position (row, col)",
        "    del row col     delete X at (row, col)",
        "    reveal          reveal the solution",
        "    home            go to home screen",
        "    quit            quit game",
+       "    dict            show the abbreviation dictionary",
        "    help            display this help message",
        "",
        "Do note that hint numbers greater than 10 and less than 36 are" ++
-       " abbreviated to alphabetical characters."]
+       " abbreviated to alphabetical characters.",
+       "This is the reason for the 'dict' command."]
 
 -- * check solution functions
 -- | checking whether the nonogram has been solved or not
