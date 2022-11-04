@@ -61,7 +61,6 @@ startGame = do
               let puzzle = replicate c (replicate r '_')
               putStrLn ""
               printP puzzle rowHint colHint
-              putStrLn "Enter your commands below:"
               state <- userSolve puzzle rowHint colHint
               case state of
                    "m"   -> main

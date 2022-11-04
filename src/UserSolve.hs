@@ -25,7 +25,6 @@ userSolve puzzle rowHint colHint =
          let elseCase = putStrLn "Unknown cmd, help?"
                         >> userSolve puzzle rowHint colHint
          case input of
-              "quit"   -> putStrLn "quitting game..." >> return ""
               "home"   -> return "m"
               "reveal" -> return "sol"
               "help"   -> help
@@ -33,7 +32,10 @@ userSolve puzzle rowHint colHint =
               "print"  -> printP puzzle rowHint colHint
                           >> userSolve puzzle rowHint colHint
               "dict"   -> printDict
+                          >> putStrLn cmdPrompt
                           >> userSolve puzzle rowHint colHint
+              "quit"   -> putStrLn "quitting game..."
+                          >> return ""
               str      ->
                   case words str of
                        [h:_,rs,cs] ->
@@ -84,10 +86,10 @@ delX  r c pz@(x:_)
     | otherwise = if (pz !! (r-1)) !! (c-1) == '_'
                   then do
                        putStrLn "\t** Position is already empty!"
-                       return pz
+                       return   pz
                   else do
                        putStrLn $ "Unmarked (" ++ show r ++ ", " ++ show c ++ ")." 
-                       return $ findCol r c pz 1 delRow
+                       return   $ findCol r c pz 1 delRow
 delX _ _ _ = error "delX: Puzzle is empty"
 
 -- | function to unmark X in a specific row;
@@ -113,7 +115,7 @@ findCol r c (x:xs) ri f
 printP :: Puzzle -> Hints -> Hints -> IO ()
 printP [] rhs chs =
     case rhs of
-         [] -> printColHint chs
+         [] -> printColHint chs >> putStrLn cmdPrompt
          _  -> error "printP: row hint not empty after complete traversal"
 printP (r:rs) (rh:rhs) chs = do
     let rowP = concatMap (('|' :) . tail . init . show) r
@@ -130,11 +132,15 @@ printRowHint rhs = do
 
 -- | helper function printing the column hints
 printColHint :: Hints -> IO ()
-printColHint [] = return ()
 printColHint chs = do
-    let line = concatMap ((flip (++) " " . showNum) . head) chs
-    putStrLn $ init (' ' : line)
-    printColHint (filter (/= []) . map tail $ chs)
+    if all (== []) chs
+       then return ()
+       else do
+            let headDisp lst = if lst /= [] then head lst else 0
+            let line0 = concatMap (flip (++) " " . showNum . headDisp) chs
+            let line  = map (\x -> if x == '0' then ' ' else x) line0
+            putStrLn $ ' ' : line
+            printColHint $ map (\x -> if x /= [] then tail x else []) chs
 
 -- | function initiated when user inputs the 'help' command in-game
 help :: IO ()
@@ -151,7 +157,12 @@ help = putStr $ unlines [
        "",
        "Do note that hint numbers greater than 10 and less than 36 are" ++
        " abbreviated to alphabetical characters.",
-       "This is the reason for the 'dict' command."]
+       "This is the reason for the 'dict' command.",
+       cmdPrompt]
+
+-- | Prompting for command - returning string that may be used in multiple functions
+cmdPrompt :: String
+cmdPrompt = "Enter your command below:"
 
 -- * check solution functions
 -- | checking whether the nonogram has been solved or not
@@ -161,7 +172,7 @@ solved pz rowHint colHint = rowSolved pz rowHint && rowSolved (transpose pz) col
 rowSolved :: Puzzle -> Hints -> Bool
 rowSolved [] _ = True
 rowSolved (r:rs) (h:hs) =
-    length (filter (== 'X') r) == sum h && (validRow r' h && rowSolved rs hs)
+    length (filter (== 'X') r) == sum h && validRow r' h && rowSolved rs hs
     where r' = reverse . dropWhile (== '_') . reverse . dropWhile (== '_') $ r
           validRow _ []     = True
           validRow x (y:ys) =
@@ -169,8 +180,8 @@ rowSolved (r:rs) (h:hs) =
             case fr of
               [] -> False
               _  ->
-                let allX = all (== 'X') fr in
-                case en of
-                  [] -> allX
-                  _  -> allX && head en == '_' && validRow (dropWhile (== '_') en) ys
+                 let allX = all (== 'X') fr in
+                 case en of
+                   [] -> allX
+                   _  -> allX && head en == '_' && validRow (dropWhile (== '_') en) ys
 rowSolved _ _ = error "rowSolved: row or column has empty hint"
