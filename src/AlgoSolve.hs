@@ -14,27 +14,23 @@ import Data.Maybe    (maybeToList)
 import NumAbbreviation
 
 -- * types
+-- ** Puzzle component types
 type Hint   = [Int]
 type Hints  = [Hint]
 type Row    = [Char]
 type Puzzle = [Row]
 
+-- ** Grid
 type RowG s = [s]
 type Grid s = [RowG s]
 -- ** partial information about a square
 type Square = Maybe Bool
 
--- | Print the first solution (if any) to the nonogram
-nonogram :: Hints -> Hints -> String
-nonogram rs cs =
-    case solve rs cs of
-         []       -> "nil"
-         (grid:_) -> showGrid rs cs grid
-
+-- * functions
 -- | All solutions to the nonogram
 solve :: Hints -> Hints -> [Grid Bool]
 solve rs cs =
-    [grid' | grid <- maybeToList (deduction rs cs),
+    [grid' | grid  <- maybeToList (deduction rs cs),
              grid' <- zipWithM (rowsMatch $ length cs) rs grid,
              map (map length . filter head . group) (transpose grid') == cs]
 
@@ -51,15 +47,16 @@ deduction rs cs = converge step initial
 -- | repeatedly apply f until a fixed point is reached
 converge :: (Monad m, Eq a) => (a -> m a) -> a -> m a
 converge f s = do
-        s' <- f s
-        if s' == s then return s else converge f s'
+    s' <- f s
+    if s' == s then return s else converge f s'
 
 -- | common n ks partial = commonality between all possible ways of
 --   placing blocks of length ks in a row of length n that match partial.
 common :: Int -> Hint -> RowG Square -> Maybe (RowG Square)
-common n ks partial = case rowsMatch n ks partial of
-        [] -> Nothing
-        rs -> Just $ foldr1 (zipWith unify) (map (map Just) rs)
+common n ks partial =
+    case rowsMatch n ks partial of
+         [] -> Nothing
+         rs -> Just . foldr1 (zipWith unify) . map (map Just) $ rs
 
 unify :: Square -> Square -> Square
 unify x y = if x == y then x else Nothing
@@ -69,9 +66,9 @@ unify x y = if x == y then x else Nothing
 rowsMatch :: Int -> Hint -> RowG Square -> [RowG Bool]
 rowsMatch _ [] [] = [[]]
 rowsMatch _ _  [] = []
-rowsMatch n ks (Nothing:partial) =
+rowsMatch n ks (Just s  : partial) = rowsMatchAux n ks s partial
+rowsMatch n ks (Nothing : partial) =
     rowsMatchAux n ks True partial ++ rowsMatchAux n ks False partial
-rowsMatch n ks (Just s:partial)  = rowsMatchAux n ks s partial
 
 -- | helper function for rowsMatch
 rowsMatchAux :: Int -> Hint -> Bool -> RowG Square -> [RowG Bool]
@@ -90,15 +87,20 @@ rowsMatchAux _ _ _ _ = error "rowsMatchAux: incorrect pattern matched"
 
 -- | function printing puzzle's grid
 showGrid :: Hints -> Hints -> Grid Bool -> String
-showGrid rhs chs shs = unlines (zipWith showRow rhs shs ++ showCols chs)
-    where showRow rs ss = concat [['|', cellChar s] | s <- ss] ++ "| " ++
-                          unwords (map showNum rs)
+showGrid  rhs  chs  shs = unlines (zipWith showRow rhs shs ++ showCols chs)
+    where showRow rs ss = concat
+              [['|', (\x -> if x then 'X' else '_') s] | s <- ss] ++ "| " ++
+               unwords (map showNum rs)
           showCols cs
               | all null cs = []
-              | otherwise =
-                    concatMap showCol cs :
-                    showCols (map (\l -> if null l then [] else tail l) cs)
-                    where showCol (k:_) = ' ' : showNum k
-                          showCol  _    = "  "
-          cellChar True  = 'X'
-          cellChar False = '_'
+              | otherwise   = let tailEmp l = if null l then [] else tail l
+                              in  concatMap showCol cs : showCols (map tailEmp cs)
+                              where showCol (k:_) = ' ' : showNum k
+                                    showCol  _    = "  "
+
+-- | Print the first solution (if any) to the nonogram
+nonogram :: Hints -> Hints -> String
+nonogram rs cs =
+    case solve rs cs of
+         []       -> "nil"
+         (grid:_) -> showGrid rs cs grid

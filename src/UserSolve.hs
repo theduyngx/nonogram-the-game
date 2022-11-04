@@ -27,23 +27,23 @@ userSolve puzzle rowHint colHint =
          case input of
               "home"   -> return "m"
               "reveal" -> return "sol"
-              "help"   -> help
-                          >> userSolve puzzle rowHint colHint
-              "print"  -> printP puzzle rowHint colHint
-                          >> userSolve puzzle rowHint colHint
-              "dict"   -> printDict
-                          >> putStrLn cmdPrompt
-                          >> userSolve puzzle rowHint colHint
-              "quit"   -> putStrLn "quitting game..."
-                          >> return ""
+              "help"   -> do help
+                             userSolve puzzle rowHint colHint
+              "quit"   -> do putStrLn "quitting game..."
+                             return ""
+              "print"  -> do printP puzzle rowHint colHint
+                             userSolve puzzle rowHint colHint
+              "dict"   -> do printDict
+                             putStrLn cmdPrompt
+                             userSolve puzzle rowHint colHint
               str      ->
                   case words str of
                        [h:_,rs,cs] ->
                             let command
-                                  | h == 'a' = do
+                                  | h == 'a'  = do
                                         puzzle' <- addX r c puzzle
                                         userSolve puzzle' rowHint colHint
-                                  | h == 'd' = do
+                                  | h == 'd'  = do
                                         puzzle' <- delX r c puzzle
                                         userSolve puzzle' rowHint colHint
                                   | otherwise = elseCase
@@ -64,18 +64,18 @@ addX  r c pz@(x:_)
                        putStrLn "\t** Position is already marked X!"
                        return pz
                   else do
-                       putStrLn $ "Marked (" ++ show r ++ ", " ++ show c ++ ")." 
-                       return $ findCol r c pz 1 addRow
-addX _ _ _ = error "addX: Puzzle is empty"
+                       putStrLn $ "Marked (" ++ show r ++ ", " ++ show c ++ ")."
+                       return   $ findCol r c pz 1 addRow
+addX  _ _ [] = error "addX: Puzzle is empty"
 
 -- | function to mark X to a specific row
 --   called as an argument of findCol for the function addX
 addRow :: Int -> Row -> Int -> Row
 addRow _ [] _ = []
 addRow c (row:rows) ci
-    | c == ci   = 'X' : rows
-    | c >  ci   = row : addRow c rows (ci+1)
-    | otherwise = error "addRow: row index somehow exceeded number of rows"
+     | c == ci   = 'X' : rows
+     | c >  ci   = row : addRow c rows (ci+1)
+     | otherwise = error "addRow: row index somehow exceeded number of rows"
 
 -- | function to delete a marked X on the board
 delX :: Int -> Int -> Puzzle -> IO Puzzle
@@ -88,9 +88,9 @@ delX  r c pz@(x:_)
                        putStrLn "\t** Position is already empty!"
                        return   pz
                   else do
-                       putStrLn $ "Unmarked (" ++ show r ++ ", " ++ show c ++ ")." 
+                       putStrLn $ "Unmarked (" ++ show r ++ ", " ++ show c ++ ")."
                        return   $ findCol r c pz 1 delRow
-delX _ _ _ = error "delX: Puzzle is empty"
+delX  _ _ [] = error "delX: Puzzle is empty"
 
 -- | function to unmark X in a specific row;
 --   similar function to addRow
@@ -136,11 +136,11 @@ printColHint chs = do
     if all (== []) chs
        then return ()
        else do
-            let headDisp lst = if lst /= [] then head lst else 0
+            let headDisp l = if null l then 0 else head l
             let line0 = concatMap (flip (++) " " . showNum . headDisp) chs
             let line  = map (\x -> if x == '0' then ' ' else x) line0
             putStrLn $ ' ' : line
-            printColHint $ map (\x -> if x /= [] then tail x else []) chs
+            printColHint $ map (\x -> if null x then x else tail x) chs
 
 -- | function initiated when user inputs the 'help' command in-game
 help :: IO ()

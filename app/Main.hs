@@ -31,23 +31,22 @@ mainCmd = do
     case command of
          "quit"  -> putStrLn "quitting game..."
          "home"  -> main
-         "help"  -> helpHome
-                    >> mainCmd
-         "start" -> putStrLn "Enter the hints for row and column:"
-                    >> startGame
-         _ ->
-           putStrLn "Unknown command, please enter 'start', 'home' or 'quit'."
-           >> mainCmd
+         "help"  -> do helpHome
+                       mainCmd
+         "start" -> do putStrLn "Enter the hints for row and column:"
+                       startGame
+         _ -> do putStrLn "Unknown command, please enter 'start', 'home' or 'quit'."
+                 mainCmd
 
 -- | function initiated when user starts the game
 startGame :: IO ()
 startGame = do
     putStrLn "\t-- Row hint:"
     rowStr <- getLine
-    let rowHint = read rowStr :: Hints
+    let rowHint  = read rowStr :: Hints
     putStrLn "\t-- Column hint:"
     colStr <- getLine
-    let colHint = read colStr :: Hints
+    let colHint  = read colStr :: Hints
     let solution = nonogram rowHint colHint
     case solution of
          "nil" ->
