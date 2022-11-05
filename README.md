@@ -1,9 +1,9 @@
-# Nonogram
+# NONOGRAM - The Game
 
 ## About
-**NONOGRAM - The Game** is a Haskell I/O game revolving around the popular Japanese puzzle nonograms.
-Players can input any puzzle they like, and the program will make sure that the puzzle is truly solvable before
-players can proceed any further.
+**NONOGRAM - The Game** is a Haskell interactive puzzle game revolving around the popular Japanese puzzle
+nonograms. Players can input any puzzle they like, and the program will make sure that the puzzle is truly
+solvable before players can proceed any further.
 
 About nonogram, the rules are simple. For each row / column, there are 'hints', which we will refer to as row
 hint and column hint. These hints will specify the layout the the row / column that players must follow.
