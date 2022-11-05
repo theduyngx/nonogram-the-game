@@ -6,7 +6,7 @@
              asks for it, or both.
 -}
 
-module AlgoSolve (nonogram, Hint, Hints, Row, Puzzle) where
+module AlgoSolve (nonogram, Hint, Hints, Row, Grid, Puzzle) where
 
 import Control.Monad (zipWithM)
 import Data.List     (transpose, group)
@@ -14,15 +14,14 @@ import Data.Maybe    (maybeToList)
 import NumAbbreviation
 
 -- * types
--- ** Puzzle component types
+-- ** Hints
 type Hint   = [Int]
 type Hints  = [Hint]
-type Row    = [Char]
-type Puzzle = [Row]
 
 -- ** Grid
-type RowG s = [s]
-type Grid s = [RowG s]
+type Row  s = [s]
+type Grid s = [Row s]
+type Puzzle = Grid Char
 -- ** partial information about a square
 type Square = Maybe Bool
 
@@ -52,7 +51,7 @@ converge f s = do
 
 -- | common n ks partial = commonality between all possible ways of
 --   placing blocks of length ks in a row of length n that match partial.
-common :: Int -> Hint -> RowG Square -> Maybe (RowG Square)
+common :: Int -> Hint -> Row Square -> Maybe (Row Square)
 common n ks partial =
     case rowsMatch n ks partial of
          [] -> Nothing
@@ -63,7 +62,7 @@ unify x y = if x == y then x else Nothing
 
 -- | rowsMatch n ks partial = all possible ways of placing blocks of
 --   length ks in a row of length n that match partial.
-rowsMatch :: Int -> Hint -> RowG Square -> [RowG Bool]
+rowsMatch :: Int -> Hint -> Row Square -> [Row Bool]
 rowsMatch _ [] [] = [[]]
 rowsMatch _ _  [] = []
 rowsMatch n ks (Just s  : partial) = rowsMatchAux n ks s partial
@@ -71,7 +70,7 @@ rowsMatch n ks (Nothing : partial) =
     rowsMatchAux n ks True partial ++ rowsMatchAux n ks False partial
 
 -- | helper function for rowsMatch
-rowsMatchAux :: Int -> Hint -> Bool -> RowG Square -> [RowG Bool]
+rowsMatchAux :: Int -> Hint -> Bool -> Row Square -> [Row Bool]
 rowsMatchAux n ks False partial =
     [False : row | row <- rowsMatch (n-1) ks partial]
 rowsMatchAux n [k] True partial =

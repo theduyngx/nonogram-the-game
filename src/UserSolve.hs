@@ -70,7 +70,7 @@ addX  _ _ [] = error "addX: Puzzle is empty"
 
 -- | function to mark X to a specific row
 --   called as an argument of findCol for the function addX
-addRow :: Int -> Row -> Int -> Row
+addRow :: Int -> Row Char -> Int -> Row Char
 addRow _ [] _ = []
 addRow c (row:rows) ci
      | c == ci   = 'X' : rows
@@ -94,7 +94,7 @@ delX  _ _ [] = error "delX: Puzzle is empty"
 
 -- | function to unmark X in a specific row;
 --   similar function to addRow
-delRow :: Int -> Row -> Int -> Row
+delRow :: Int -> Row Char -> Int -> Row Char
 delRow _ [] _ = []
 delRow c (row:rows) ci
     | c == ci   = '_' : rows
@@ -103,7 +103,7 @@ delRow c (row:rows) ci
 
 -- | function to find the column that needs modification;
 --   used in both addX and delX functions
-findCol :: Int -> Int -> Puzzle -> Int -> (Int -> Row -> Int -> Row) -> Puzzle
+findCol :: Int -> Int -> Puzzle -> Int -> (Int -> Row Char -> Int -> Row Char) -> Puzzle
 findCol _ _ [] _ _ = error "findCol: traversed through entire puzzle incorrectly"
 findCol r c (x:xs) ri f
     | r == ri   = f c x 1 : xs
